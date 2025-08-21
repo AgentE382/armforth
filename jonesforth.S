@@ -2312,3 +2312,4 @@ buffer:
 
 
 /* END OF jonesforth.S */
+/* vi: set filetype=asm: */
