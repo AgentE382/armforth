@@ -882,21 +882,35 @@ code_\label :			// assembler code follows
 */
 
 	defcode "=",1,,EQU	// top two words are equal?
-	pop %eax
-	pop %ebx
-	cmp %ebx,%eax
-	sete %al
-	movzbl %al,%eax
-	pushl %eax
+	;pop %eax
+	;pop %ebx
+	pop {r0, r1}
+	;cmp %ebx,%eax
+	cmp r0, r1
+	;sete %al
+	;movzbl %al,%eax
+	beq equ
+	mov r0, #0
+equ:
+	mov r0, #1
+	;pushl %eax
+	push {r0}
 	NEXT
 
 	defcode "<>",2,,NEQU	// top two words are not equal?
-	pop %eax
-	pop %ebx
-	cmp %ebx,%eax
-	setne %al
-	movzbl %al,%eax
-	pushl %eax
+	;pop %eax
+	;pop %ebx
+	pop {r0, r1}
+	;cmp %ebx,%eax
+	cmp r1, r0
+	;setne %al
+	;movzbl %al,%eax
+	bne nequ
+	mov r0, #0
+nequ:
+	mov r0, #1
+	;pushl %eax
+	push {r0}
 	NEXT
 
 	defcode "<",1,,LT
@@ -984,22 +998,37 @@ code_\label :			// assembler code follows
 	NEXT
 
 	defcode "AND",3,,AND	// bitwise AND
-	pop %eax
-	andl %eax,(%esp)
+	;pop %eax
+	pop {r0}
+	ldr r1, [sp, #0]
+	;andl %eax,(%esp)
+	ands r0, r0, r1
+	str r1, [sp, #0]
 	NEXT
 
 	defcode "OR",2,,OR	// bitwise OR
-	pop %eax
-	orl %eax,(%esp)
+	;pop %eax
+	pop {r0}
+	ldr r1, [sp, #0]
+	;orl %eax,(%esp)
+	orrs r0, r0, r1
+	str r1, [sp, #0]
 	NEXT
 
 	defcode "XOR",3,,XOR	// bitwise XOR
-	pop %eax
-	xorl %eax,(%esp)
+	;pop %eax
+	pop {r0}
+	ldr r1, [sp, #0]
+	;xorl %eax,(%esp)
+	eors r0, r0, r1
+	str r1, [sp, #0]
 	NEXT
 
 	defcode "INVERT",6,,INVERT // this is the FORTH bitwise "NOT" function (cf. NEGATE and NOT)
-	notl (%esp)
+	;notl (%esp)
+	ldr r0, [sp, #0]
+	mvns r0, r0, r0
+	str r0, [sp, #0]
 	NEXT
 
 /*
