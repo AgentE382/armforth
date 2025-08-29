@@ -304,10 +304,12 @@
 
 /* NEXT macro. */
 	.macro NEXT
-	ldr r0, [r4, #0]; lodsl
-	adds r4, r4, #4 ; lodsl
-	ldr r0, [r0, #0]; jmp *(%eax)
-	bx r0           ; jmp *(%eax)
+	// lodsl
+	ldr r0, [r4, #0]
+	adds r4, r4, #4
+	// jmp *(%eax)
+	ldr r0, [r0, #0]
+	bx r0
 	.endm
 
 /*	The macro is called NEXT.  That's a FORTH-ism.  It expands to those two instructions.
@@ -474,16 +476,16 @@
 
 /* Macros to deal with the return stack. */
 	.macro PUSHRSP reg
-	;lea -4(%ebp),%ebp	// push reg on to return stack
+	// lea -4(%ebp),%ebp	// push reg on to return stack
 	subs r6, r6, #4
-	;movl \reg,(%ebp)
+	// movl \reg,(%ebp)
 	str \reg [r6, #0]
 	.endm
 
 	.macro POPRSP reg
-	;mov (%ebp),\reg		// pop top of return stack to reg
+	// mov (%ebp),\reg		// pop top of return stack to reg
 	ldr \reg [r6, #0]
-	;lea 4(%ebp),%ebp
+	// lea 4(%ebp),%ebp
 	adds r6, r6, #4
 	.endm
 
@@ -505,13 +507,13 @@
 	.text
 	.align 4
 DOCOL:
-	;PUSHRSP %esi		// push %esi on to the return stack
+	// PUSHRSP %esi		// push %esi on to the return stack
 	PUSHRSP r4
-	;addl $4,%eax		// %eax points to codeword, so make
-	; adds r0, r0, #4
-	;movl %eax,%esi		// %esi point to first data word
-	; movs r4, r0
-	adds r4, r0, #4; FIXME idk if jones put any magic later relying on eax == esi at this point
+	// addl $4,%eax		// %eax points to codeword, so make
+	//  adds r0, r0, #4
+	// movl %eax,%esi		// %esi point to first data word
+	//  movs r4, r0
+	adds r4, r0, #4//  FIXME idk if jones put any magic later relying on eax == esi at this point
 	NEXT
 
 /*
@@ -574,17 +576,17 @@ stack points ->	| addr of DOUBLE   |	   + 4 =   +------------------+
 	.text
 	.globl _start
 _start:
-	;cld
-	;mov %esp,var_S0		// Save the initial data stack pointer in FORTH variable S0.
-	adr r7, var_S0; FIXME ahh idk if this is right, but temp = &var_S0; temp2 = sp; *temp = temp2;
+	// cld
+	// mov %esp,var_S0		// Save the initial data stack pointer in FORTH variable S0.
+	adr r7, var_S0//  FIXME ahh idk if this is right, but temp = &var_S0; temp2 = sp; *temp = temp2;
 	mov r5, sp
 	str r5, [r7, #0]
-	;mov $return_stack_top,%ebp // Initialise the return stack.
+	// mov $return_stack_top,%ebp // Initialise the return stack.
 	adr r6, return_stack_top
-	;call set_up_data_segment
-	b set_up_data_segment; FIXME might need to be bl if label is too far
+	// call set_up_data_segment
+	b set_up_data_segment//  FIXME might need to be bl if label is too far
 
-	;mov $cold_start,%esi	// Initialise interpreter.
+	// mov $cold_start,%esi	// Initialise interpreter.
 	adr r4, cold_start
 	NEXT			// Run interpreter!
 
@@ -708,148 +710,148 @@ code_\label :			// assembler code follows
 */
 
 	defcode "DROP",4,,DROP
-	;pop %eax		// drop top of stack
-	pop {r0}; we don't care about the output but have to put it somewhere
+	// pop %eax		// drop top of stack
+	pop {r0}//  we don't care about the output but have to put it somewhere
 	NEXT
 
 	defcode "SWAP",4,,SWAP
-	;pop %eax		// swap top two elements on stack
-	;pop %ebx
+	// pop %eax		// swap top two elements on stack
+	// pop %ebx
 	pop {r0, r1}
-	;push %eax
-	;push %ebx
+	// push %eax
+	// push %ebx
 	push {r0, r1}
 	NEXT
 
 	defcode "DUP",3,,DUP
-	;mov (%esp),%eax		// duplicate top of stack
+	// mov (%esp),%eax		// duplicate top of stack
 	ldr r0, [sp, #0]
-	;push %eax
+	// push %eax
 	push {r0}
 	NEXT
 
 	defcode "OVER",4,,OVER
-	;mov 4(%esp),%eax	// get the second element of stack
+	// mov 4(%esp),%eax	// get the second element of stack
 	ldr r0, [sp, #4]
-	;push %eax		// and push it on top
+	// push %eax		// and push it on top
 	push {r0}
 	NEXT
 
 	defcode "ROT",3,,ROT
-	;pop %eax
-	;pop %ebx
-	;pop %ecx
+	// pop %eax
+	// pop %ebx
+	// pop %ecx
 	pop {r0, r1, r2}
-	;push %ebx
-	;push %eax
-	;push %ecx
+	// push %ebx
+	// push %eax
+	// push %ecx
 	push {r1, r0, r2}
 	NEXT
 
 	defcode "-ROT",4,,NROT
-	;pop %eax
-	;pop %ebx
-	;pop %ecx
+	// pop %eax
+	// pop %ebx
+	// pop %ecx
 	pop {r0, r1, r2}
-	;push %eax
-	;push %ecx
-	;push %ebx
+	// push %eax
+	// push %ecx
+	// push %ebx
 	push {r0, r2, r1}
 	NEXT
 
 	defcode "2DROP",5,,TWODROP // drop top two elements of stack
-	;pop %eax
-	;pop %eax
+	// pop %eax
+	// pop %eax
 	pop {r0, r0}
 	NEXT
 
 	defcode "2DUP",4,,TWODUP // duplicate top two elements of stack
-	;mov (%esp),%eax
+	// mov (%esp),%eax
 	ldr r0, [sp, #0]
-	;mov 4(%esp),%ebx
+	// mov 4(%esp),%ebx
 	ldr r1, [sp, #4]
-	;push %ebx
-	;push %eax
+	// push %ebx
+	// push %eax
 	push {r1, r0}
 	NEXT
 
 	defcode "2SWAP",5,,TWOSWAP // swap top two pairs of elements of stack
-	;pop %eax
-	;pop %ebx
-	;pop %ecx
-	;pop %edx
+	// pop %eax
+	// pop %ebx
+	// pop %ecx
+	// pop %edx
 	pop {r0, r1, r2, r3}
-	;push %ebx
-	;push %eax
-	;push %edx
-	;push %ecx
+	// push %ebx
+	// push %eax
+	// push %edx
+	// push %ecx
 	push {r1, r0, r3, r2}
 	NEXT
 
 	defcode "?DUP",4,,QDUP	// duplicate top of stack if non-zero
-	;movl (%esp),%eax
+	// movl (%esp),%eax
 	ldr r0, [sp, #0]
-	;test %eax,%eax
+	// test %eax,%eax
 	tst r0, r0
-	;jz 1f
-	beq 1f; FIXME idk whether this is correct syntax for the label and idk if eq is really Z==1
-	;push %eax
+	// jz 1f
+	beq 1f//  FIXME idk whether this is correct syntax for the label and idk if eq is really Z==1
+	// push %eax
 	push {r0}
 1:	NEXT
 
 	defcode "1+",2,,INCR
-	;incl (%esp)		// increment top of stack
+	// incl (%esp)		// increment top of stack
 	ldr r0, [sp, #0]
 	adds r0, r0, #1
 	str r0, [sp, #0]
 	NEXT
 
 	defcode "1-",2,,DECR
-	;decl (%esp)		// decrement top of stack
+	// decl (%esp)		// decrement top of stack
 	ldr r0, [sp, #0]
 	subs r0, r0, #1
 	str r0, [sp, #0]
 	NEXT
 
 	defcode "4+",2,,INCR4
-	;addl $4,(%esp)		// add 4 to top of stack
+	// addl $4,(%esp)		// add 4 to top of stack
 	ldr r0, [sp, #0]
 	adds r0, r0, #4
 	str r0, [sp, #0]
 	NEXT
 
 	defcode "4-",2,,DECR4
-	;subl $4,(%esp)		// subtract 4 from top of stack
+	// subl $4,(%esp)		// subtract 4 from top of stack
 	ldr r0, [sp, #0]
 	subs r0, r0, #4
 	str r0, [sp, #0]
 	NEXT
 
 	defcode "+",1,,ADD
-	;pop %eax		// get top of stack
+	// pop %eax		// get top of stack
 	pop {r0}
-	;addl %eax,(%esp)	// and add it to next word on stack
+	// addl %eax,(%esp)	// and add it to next word on stack
 	ldr r1, [sp, #0]
 	adds r0, r0, r1
 	str r0, [sp, #0]
 	NEXT
 
 	defcode "-",1,,SUB
-	;pop %eax		// get top of stack
+	// pop %eax		// get top of stack
 	pop {r0}
-	;subl %eax,(%esp)	// and subtract it from next word on stack
+	// subl %eax,(%esp)	// and subtract it from next word on stack
 	ldr r1, [sp, #0]
 	subs r0, r1, r0
 	str r0, [sp, #0]
 	NEXT
 
 	defcode "*",1,,MUL
-	;pop %eax
-	;pop %ebx
+	// pop %eax
+	// pop %ebx
 	pop {r0, r1}
-	;imull %ebx,%eax
+	// imull %ebx,%eax
 	muls r0, r1, r0
-	;push %eax		// ignore overflow
+	// push %eax		// ignore overflow
 	push {r0}
 	NEXT
 
@@ -860,15 +862,15 @@ code_\label :			// assembler code follows
 */
 
 	defcode "/MOD",4,,DIVMOD
-	;xor %edx,%edx
+	// xor %edx,%edx
 	eors r3, r3, r3
-	;pop %ebx
-	;pop %eax
+	// pop %ebx
+	// pop %eax
 	pop {r1, r0}
-	idivl %ebx              ; FIXME: Uh, this is big bad. Probably split into two primitives. Definitely use fast division from libdivide.
-				; FIXME: Maybe implement all 3 in assembly for speed
-	;push %edx		// push remainder
-	;push %eax		// push quotient
+	idivl %ebx              //  FIXME: Uh, this is big bad. Probably split into two primitives. Definitely use fast division from libdivide.
+				//  FIXME: Maybe implement all 3 in assembly for speed
+	// push %edx		// push remainder
+	// push %eax		// push quotient
 	push {r3, r0}
 	NEXT
 
@@ -882,34 +884,34 @@ code_\label :			// assembler code follows
 */
 
 	defcode "=",1,,EQU	// top two words are equal?
-	;pop %eax
-	;pop %ebx
+	// pop %eax
+	// pop %ebx
 	pop {r0, r1}
-	;cmp %ebx,%eax
+	// cmp %ebx,%eax
 	cmp r0, r1
-	;sete %al
-	;movzbl %al,%eax
+	// sete %al
+	// movzbl %al,%eax
 	beq equ
 	mov r0, #0
 equ:
 	mov r0, #1
-	;pushl %eax
+	// pushl %eax
 	push {r0}
 	NEXT
 
 	defcode "<>",2,,NEQU	// top two words are not equal?
-	;pop %eax
-	;pop %ebx
+	// pop %eax
+	// pop %ebx
 	pop {r0, r1}
-	;cmp %ebx,%eax
+	// cmp %ebx,%eax
 	cmp r1, r0
-	;setne %al
-	;movzbl %al,%eax
+	// setne %al
+	// movzbl %al,%eax
 	bne nequ
 	mov r0, #0
 nequ:
 	mov r0, #1
-	;pushl %eax
+	// pushl %eax
 	push {r0}
 	NEXT
 
@@ -998,34 +1000,34 @@ nequ:
 	NEXT
 
 	defcode "AND",3,,AND	// bitwise AND
-	;pop %eax
+	// pop %eax
 	pop {r0}
 	ldr r1, [sp, #0]
-	;andl %eax,(%esp)
+	// andl %eax,(%esp)
 	ands r0, r0, r1
 	str r1, [sp, #0]
 	NEXT
 
 	defcode "OR",2,,OR	// bitwise OR
-	;pop %eax
+	// pop %eax
 	pop {r0}
 	ldr r1, [sp, #0]
-	;orl %eax,(%esp)
+	// orl %eax,(%esp)
 	orrs r0, r0, r1
 	str r1, [sp, #0]
 	NEXT
 
 	defcode "XOR",3,,XOR	// bitwise XOR
-	;pop %eax
+	// pop %eax
 	pop {r0}
 	ldr r1, [sp, #0]
-	;xorl %eax,(%esp)
+	// xorl %eax,(%esp)
 	eors r0, r0, r1
 	str r1, [sp, #0]
 	NEXT
 
 	defcode "INVERT",6,,INVERT // this is the FORTH bitwise "NOT" function (cf. NEGATE and NOT)
-	;notl (%esp)
+	// notl (%esp)
 	ldr r0, [sp, #0]
 	mvns r0, r0, r0
 	str r0, [sp, #0]
